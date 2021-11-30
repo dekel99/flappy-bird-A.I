@@ -9,18 +9,25 @@ scrn.addEventListener("click",()=>{
            // SFX.start.play();
            break;
        case state.Play :
-           bird.flap();
+        //    bird.flap();
+            applyBirds("flap")
            break;
        case state.gameOver :
-           state.curr = state.getReady;
-           bird.speed = 0;
-           bird.y = 100;
-           pipe.pipes=[];
-           UI.score.curr = 0;
-           // SFX.played=false;
+           gameOver()
            break;
    }
 })
+
+function gameOver(){
+    state.curr = state.getReady;
+    //    bird.speed = 0;
+    //    bird.y = 100;
+    applyBirds("gameOver")
+    pipe.pipes=[];
+    UI.score.curr = 0;
+    // SFX.played=false;
+
+}
 
  scrn.onkeydown = function keyDown(e) {
  	if (e.keyCode == 32 || e.keyCode == 87 || e.keyCode == 38)   // Space Key or W key or arrow up
@@ -31,12 +38,14 @@ scrn.addEventListener("click",()=>{
 	            // SFX.start.play();
 	            break;
 	        case state.Play :
-	            bird.flap();
+	            // bird.flap();
+                applyBirds("flap")
 	            break;
 	        case state.gameOver :
 	            state.curr = state.getReady;
-	            bird.speed = 0;
-	            bird.y = 100;
+	            // bird.speed = 0;
+	            // bird.y = 100;
+                applyBirds("gameOver")
 	            pipe.pipes=[];
 	            UI.score.curr = 0;
 	            // SFX.played=false;
@@ -44,7 +53,8 @@ scrn.addEventListener("click",()=>{
    		}
  	}
 }
-
+let savedBirds = []
+const birdsTotal = 100
  let frames = 0;
  let dx = 2;
  const state = {
@@ -84,7 +94,7 @@ scrn.addEventListener("click",()=>{
         y = parseFloat(scrn.height-this.sprite.height);
         sctx.drawImage(this.sprite,this.x,y);
     }
- };
+ }
  const pipe = {
      top : {sprite : new Image()},
      bot : {sprite : new Image()},
@@ -92,8 +102,7 @@ scrn.addEventListener("click",()=>{
      moved: true,
      pipes : [],
      draw : function(){
-        for(let i = 0;i<this.pipes.length;i++)
-        {
+        for(let i = 0;i<this.pipes.length;i++){
             let p = this.pipes[i];
             sctx.drawImage(this.top.sprite,p.x,p.y)
             sctx.drawImage(this.bot.sprite,p.x,p.y+parseFloat(this.top.sprite.height)+this.gap)
@@ -101,26 +110,18 @@ scrn.addEventListener("click",()=>{
      },
      update : function(){
          if(state.curr!=state.Play) return;
-         if(frames%100==0)
-         {
-             this.pipes.push({x:parseFloat(scrn.width),y:-210*Math.min(Math.random()+1,1.8)});
+         if(frames%100==0){
+            this.pipes.push({x:parseFloat(scrn.width),y:-210*Math.min(Math.random()+1,1.8)});
          }
          this.pipes.forEach(pipe=>{
              pipe.x -= dx;
          })
-
-         if(this.pipes.length&&this.pipes[0].x < -this.top.sprite.width)
-         {
+         if(this.pipes.length&&this.pipes[0].x < -this.top.sprite.width){
             this.pipes.shift();
             this.moved = true;
          }
-
-     }
+    }
  };
-
- setInterval(() => {
-     console.log(pipe.pipes)
- }, 1000);
 
  bird = {
     animations :
@@ -137,6 +138,8 @@ scrn.addEventListener("click",()=>{
     gravity : .125,
     thrust : 3.6,
     frame:0,
+    score: 0,
+    fitness: 0,
     draw : function() {
         let h = this.animations[this.frame].sprite.height;
         let w = this.animations[this.frame].sprite.width;
@@ -155,13 +158,18 @@ scrn.addEventListener("click",()=>{
                 this.frame += (frames%10==0) ? 1 : 0;
                 break;
             case state.Play :
-                this.frame += (frames%5==0) ? 1 : 0;
-                this.y += this.speed;
+                this.frame += (frames%5==0) ? 1 : 0
+                this.y += this.speed
                 this.setRotation()
                 this.speed += this.gravity;
-                if(this.y + r  >= gnd.y||this.collisioned())
-                {
-                    state.curr = state.gameOver;
+                if(this.y + r  >= gnd.y||this.collisioned()){
+                    savedBirds.push(birds.splice(birds.indexOf(this), 1)[0])
+                    if (birds.length===0) {
+                        gameOver()
+                        // state.curr = state.getReady
+                        state.curr = state.Play
+                        nextGeneration()
+                    }
                 }
                 
                 break;
@@ -173,30 +181,26 @@ scrn.addEventListener("click",()=>{
                     this.speed += this.gravity*2;
                 }
                 else {
-                this.speed = 0;
-                this.y=gnd.y-r;
-                this.rotatation=90;
-                // if(!SFX.played) {
-                //     SFX.die.play();
-                //     SFX.played = true;
-                // }
+                    this.speed = 0;
+                    this.y=gnd.y-r;
+                    this.rotatation=90;
+                    // if(!SFX.played) {
+                    //     SFX.die.play();
+                    //     SFX.played = true;
+                    // }
                 }
-                
                 break;
         }
         this.frame = this.frame%this.animations.length;       
     },
     flap : function(){
-        if(this.y > 0)
-        {
+        if(this.y > 0){
             // SFX.flap.play();
             this.speed = -this.thrust;
         }
     },
     setRotation : function(){
-        if(this.speed <= 0)
-        {
-            
+        if(this.speed <= 0){
             this.rotatation = Math.max(-25, -25 * this.speed/(-1*this.thrust));
         }
         else if(this.speed > 0 ) {
@@ -212,38 +216,44 @@ scrn.addEventListener("click",()=>{
         let roof = y + parseFloat(pipe.top.sprite.height);
         let floor = roof + pipe.gap;
         let w = parseFloat(pipe.top.sprite.width);
-        if(this.x + r>= x)
-        {
-            if(this.x + r < x + w)
-            {
-                if(this.y - r <= roof || this.y + r>= floor)
-                {
+        if(this.x + r>= x){
+            if(this.x + r < x + w){
+                if(this.y - r <= roof || this.y + r>= floor){
                     // SFX.hit.play();
                     return true;
                 }
-
             }
-            else if(pipe.moved)
-            {
+            else if(pipe.moved){
                 UI.score.curr++;
                 // SFX.score.play();
                 pipe.moved = false;
             }    
         }
     },
-    brain: new NeuralNetwork(4,4,1),
+    brain: null,
     think: function(){
-        // console.log(this.y)
-        let inputs = [this.y, 0.5, 0.2, 0.3]
+        this.score++
+        let birdPipeDistance, birdHeight
+        if(pipe.pipes[0]?.x < 0){
+            birdPipeDistance = pipe.pipes[1]?.x!==undefined ? pipe.pipes[1].x / scrn.width : 1
+        } else {
+            birdPipeDistance = pipe.pipes[0]?.x!==undefined ? pipe.pipes[0].x / scrn.width : 1
+        }
+        if(this.y / 290 > 1){
+            birdHeight = 1
+        } else if (this.y / 290 < 0){
+            birdHeight = 0
+        } else {
+            birdHeight = this.y / 290
+        }
+        const pipeHeight = pipe.pipes[0]?.y ? (pipe.pipes[0].y + 210) / - 170 : 0.5
+        let inputs = [birdHeight, birdPipeDistance, pipeHeight, 0.3]
         let output = this.brain.predict(inputs)
-        // console.log(output)
-        if(output>0.5){
+        if(output[0]>0.5){
             this.flap()
         }
     }
  };
-
- const bird2 = Object.assign({}, bird);
 
 
  const UI = {
@@ -337,6 +347,33 @@ bird.animations[3].sprite.src="img/bird/b0.png";
 // SFX.score.src = "sfx/score.wav"
 // SFX.hit.src = "sfx/hit.wav"
 // SFX.die.src = "sfx/die.wav"
+birds = []
+function createBirds(){
+    for(let i=0; i<birdsTotal; i++){
+        birds.push(Object.assign({}, bird))
+    }
+    applyBirds("brain")
+}
+createBirds()
+
+function applyBirds(func){
+    for(let i=0; i<birds.length; i++){
+        if(func === "update"){
+            birds[i].update()
+        } else if(func === "flap"){
+            birds[i].flap()
+        } else if(func === "draw"){
+            birds[i].draw()
+        } else if(func === "gameOver"){
+            birds[i].speed = 0;
+            birds[i].y = 100; 
+        } else if(func === "think"){
+            birds[i].think()
+        } else if(func==="brain"){
+            birds[i].brain = new NeuralNetwork(4,4,1)
+        }
+    }
+}
 
 const start = new Date().getTime() / 1000;
 let prevTime = 0
@@ -345,18 +382,19 @@ gameLoop();
 
 function gameLoop(){ 
     const now = new Date().getTime() / 1000;
-    if(now-prevTime>1/fps){
+    // if(now-prevTime>1/fps){
         update();
         draw();
-        bird.think()
+        // bird.think()
+        applyBirds("think")
         frames++;
         prevTime = now
-    }
+    // }
     requestAnimationFrame(gameLoop);
 }
 function update(){
-   bird.update();
-//    bird2.update();  
+//    bird.update();
+   applyBirds("update")
   
    gnd.update();
    pipe.update();
@@ -368,8 +406,8 @@ function draw(){
    sctx.fillRect(0,0,scrn.width,scrn.height)
    bg.draw();
    pipe.draw();
-   bird.draw();
-//    bird2.draw();
+//    bird.draw();
+    applyBirds("draw")
    gnd.draw();
    UI.draw();
 }

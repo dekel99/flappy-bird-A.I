@@ -17,7 +17,6 @@ let tanh = new ActivationFunction(
   y => 1 - (y * y)
 );
 
-
 class NeuralNetwork {
   // TODO: document what a, b, c are
   constructor(a, b, c) {
@@ -50,8 +49,6 @@ class NeuralNetwork {
     // TODO: copy these as well
     this.setLearningRate();
     this.setActivationFunction();
-
-
   }
 
   predict(input_array) {
