@@ -2,11 +2,11 @@ const RAD = Math.PI/180;
 const scrn = document.getElementById('canvas');
 const sctx = scrn.getContext("2d");
 scrn.tabIndex = 1;
+
 scrn.addEventListener("click",()=>{
    switch (state.curr) {
        case state.getReady :
            state.curr = state.Play;
-           // SFX.start.play();
            break;
        case state.Play :
         //    bird.flap();
@@ -25,8 +25,6 @@ function gameOver(){
     applyBirds("gameOver")
     pipe.pipes=[];
     UI.score.curr = 0;
-    // SFX.played=false;
-
 }
 
  scrn.onkeydown = function keyDown(e) {
@@ -35,7 +33,6 @@ function gameOver(){
  		switch (state.curr) {
 	        case state.getReady :
 	            state.curr = state.Play;
-	            // SFX.start.play();
 	            break;
 	        case state.Play :
 	            // bird.flap();
@@ -48,80 +45,73 @@ function gameOver(){
                 applyBirds("gameOver")
 	            pipe.pipes=[];
 	            UI.score.curr = 0;
-	            // SFX.played=false;
 	            break;
    		}
  	}
 }
 let savedBirds = []
-const birdsTotal = 100
- let frames = 0;
- let dx = 2;
- const state = {
-     curr : 0,
-     getReady : 0,
-     Play : 1,
-     gameOver : 2,
+const birdsTotal = 500
+let frames = 100;
+let dx = 2;
+const state = {
+    curr : 0,
+    getReady : 0,
+    Play : 1,
+    gameOver : 2,
+}
 
- }
-//  const SFX = {
-//      start : new Audio(),
-//      flap : new Audio(),
-//      score : new Audio(),
-//      hit : new Audio(),
-//      die : new Audio(),
-//      played : false
-//  }
- const gnd = {
-    sprite : new Image(),
-     x : 0,
-     y :0,
-     draw : function() {
-        this.y = parseFloat(scrn.height-this.sprite.height);
-        sctx.drawImage(this.sprite,this.x,this.y);
-     },
-     update : function() {
-        if(state.curr != state.Play) return;
-        this.x -= dx;
-        this.x = this.x % (this.sprite.width/2);    
-    }
- };
- const bg = {
-    sprite : new Image(),
+const gnd = {
+   sprite : new Image(),
     x : 0,
     y :0,
     draw : function() {
-        y = parseFloat(scrn.height-this.sprite.height);
-        sctx.drawImage(this.sprite,this.x,y);
-    }
- }
- const pipe = {
-     top : {sprite : new Image()},
-     bot : {sprite : new Image()},
-     gap:100,
-     moved: true,
-     pipes : [],
-     draw : function(){
-        for(let i = 0;i<this.pipes.length;i++){
-            let p = this.pipes[i];
-            sctx.drawImage(this.top.sprite,p.x,p.y)
-            sctx.drawImage(this.bot.sprite,p.x,p.y+parseFloat(this.top.sprite.height)+this.gap)
-        }
-     },
-     update : function(){
-         if(state.curr!=state.Play) return;
-         if(frames%100==0){
-            this.pipes.push({x:parseFloat(scrn.width),y:-210*Math.min(Math.random()+1,1.8)});
-         }
-         this.pipes.forEach(pipe=>{
-             pipe.x -= dx;
-         })
-         if(this.pipes.length&&this.pipes[0].x < -this.top.sprite.width){
-            this.pipes.shift();
-            this.moved = true;
-         }
-    }
- };
+       this.y = parseFloat(scrn.height-this.sprite.height);
+       sctx.drawImage(this.sprite,this.x,this.y);
+    },
+    update : function() {
+       if(state.curr != state.Play) return;
+       this.x -= dx;
+       this.x = this.x % (this.sprite.width/2);    
+   }
+};
+
+const bg = {
+   sprite : new Image(),
+   x : 0,
+   y :0,
+   draw : function() {
+       y = parseFloat(scrn.height-this.sprite.height)
+       sctx.drawImage(this.sprite,this.x,y)
+   }
+}
+
+const pipe = {
+   top : {sprite : new Image()},
+   bot : {sprite : new Image()},
+   gap:100,
+   moved: true,
+   pipes : [],
+   draw : function(){
+      for(let i = 0;i<this.pipes.length;i++){
+          let p = this.pipes[i];
+          sctx.drawImage(this.top.sprite,p.x,p.y)
+          sctx.drawImage(this.bot.sprite,p.x,p.y+parseFloat(this.top.sprite.height)+this.gap)
+      }
+   },
+   update : function(){
+      if(state.curr!=state.Play) return;
+      if(frames%120==0){
+         this.pipes.push({x:parseFloat(scrn.width),y:-220*Math.min(Math.random()+1,1.8)})
+      }
+      this.pipes.forEach(pipe=>{
+          pipe.x -= dx;
+      })
+      if(this.pipes.length&&this.pipes[0].x < -this.top.sprite.width){
+         this.pipes.shift()
+         this.moved = true
+      }
+   }
+}
 
  bird = {
     animations :
@@ -246,15 +236,16 @@ const birdsTotal = 100
         } else {
             birdHeight = this.y / 290
         }
-        const pipeHeight = pipe.pipes[0]?.y ? (pipe.pipes[0].y + 210) / - 170 : 0.5
-        let inputs = [birdHeight, birdPipeDistance, pipeHeight, 0.3]
+        const pipeHeightTop = pipe.pipes[0]?.y ? (pipe.pipes[0].y + 220) / - 176 : 0.5
+        const birdSpeed = this.speed / 10
+
+        let inputs = [birdHeight, birdPipeDistance, pipeHeightTop, 0.3]
         let output = this.brain.predict(inputs)
         if(output[0]>0.5){
             this.flap()
         }
     }
  };
-
 
  const UI = {
     getReady : {sprite : new Image()},
@@ -342,11 +333,7 @@ bird.animations[0].sprite.src="img/bird/b0.png";
 bird.animations[1].sprite.src="img/bird/b1.png";
 bird.animations[2].sprite.src="img/bird/b2.png";
 bird.animations[3].sprite.src="img/bird/b0.png";
-// SFX.start.src = "sfx/start.wav"
-// SFX.flap.src = "sfx/flap.wav"
-// SFX.score.src = "sfx/score.wav"
-// SFX.hit.src = "sfx/hit.wav"
-// SFX.die.src = "sfx/die.wav"
+
 birds = []
 function createBirds(){
     for(let i=0; i<birdsTotal; i++){
@@ -378,18 +365,25 @@ function applyBirds(func){
 const start = new Date().getTime() / 1000;
 let prevTime = 0
 const fps = 60
+let gameSpeed = 1
 gameLoop();
+
+speedSlider.addEventListener("change", (e)=>{
+    gameSpeed = e.target.value
+})
 
 function gameLoop(){ 
     const now = new Date().getTime() / 1000;
-    // if(now-prevTime>1/fps){
-        update();
+    for (let i=0; i<gameSpeed; i++){
+        // if(now-prevTime>1/fps){
+            update();
+            // bird.think()
+            applyBirds("think")
+            frames++;
+            prevTime = now
+            // }
+        }
         draw();
-        // bird.think()
-        applyBirds("think")
-        frames++;
-        prevTime = now
-    // }
     requestAnimationFrame(gameLoop);
 }
 function update(){
