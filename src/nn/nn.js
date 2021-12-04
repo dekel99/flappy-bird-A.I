@@ -1,4 +1,5 @@
 // Other techniques for learning
+import {Matrix} from "./matrix"
 
 class ActivationFunction {
   constructor(func, dfunc) {
@@ -17,7 +18,7 @@ let tanh = new ActivationFunction(
   y => 1 - (y * y)
 );
 
-class NeuralNetwork {
+export class NeuralNetwork {
   // TODO: document what a, b, c are
   constructor(a, b, c) {
     if (a instanceof NeuralNetwork) {

@@ -1,13 +1,12 @@
-function nextGeneration(){
+export function nextGeneration(birds, savedBirds, birdsTotal, bird){
     console.log("next gen created")
-    calculateFitness()
+    calculateFitness(savedBirds)
     for (let i = 0; i < birdsTotal; i++){
-        birds[i] = pickOne()
+        birds[i] = pickOne(savedBirds, bird)
     }
-    savedBirds = []
 }
 
-function pickOne(){
+function pickOne(savedBirds, bird){
     let index = 0
     let r = Math.random()
 
@@ -24,7 +23,7 @@ function pickOne(){
     return child
 }
 
-function calculateFitness(){
+function calculateFitness(savedBirds){
     let sum = 0
     savedBirds.forEach(bird => {
         sum += bird.score

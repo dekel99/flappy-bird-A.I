@@ -1,7 +1,7 @@
 // let m = new Matrix(3,2);
 
 
-class Matrix {
+export class Matrix {
   constructor(rows, cols) {
     this.rows = rows;
     this.cols = cols;
@@ -133,6 +133,6 @@ class Matrix {
   }
 }
 
-if (typeof module !== 'undefined') {
-  module.exports = Matrix;
-}
+// if (typeof module !== 'undefined') {
+//   module.exports = Matrix;
+// }
