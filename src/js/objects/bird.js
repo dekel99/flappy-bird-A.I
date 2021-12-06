@@ -9,7 +9,6 @@ const scrn = document.getElementById('canvas');
 const sctx = scrn.getContext("2d");
 const RAD = Math.PI/180;
 let savedBirds = []
-let newBirds
 
 export default function bird(state, gameOver){
     let bird = {
@@ -38,21 +37,28 @@ export default function bird(state, gameOver){
             sctx.drawImage(this.animations[this.frame].sprite,-w/2,-h/2);
             sctx.restore();
         },
-        update : function(frames, birds, birdsTotal, pipe, gnd, UI) {
-            let r = parseFloat( this.animations[0].sprite.width)/2;
+        update : function(frames, birds, singleBirdMode, birdsTotal, pipe, gnd, UI) {
+            let r = parseFloat(this.animations[0].sprite.width)/2;
             switch (state.curr) {
-                case state.getReady :
+                case state.getReady:
                     this.rotatation = 0;
                     this.y +=(frames%10==0) ? Math.sin(frames*RAD) :0;
                     this.frame += (frames%10==0) ? 1 : 0;
                     break;
-                case state.Play :
+                case state.Play:
                     this.frame += (frames%5==0) ? 1 : 0
                     this.y += this.speed
                     this.setRotation()
                     this.speed += this.gravity;
                     if(this.y + r  >= gnd.y||this.collisioned(pipe, UI)){
+                        if(singleBirdMode){
+                            document.getElementById("population").innerHTML = `Population: 1` 
+                            gameOver()
+                            state.curr = state.Play
+                            return
+                        }
                         savedBirds.push(birds.splice(birds.indexOf(this), 1)[0])
+                        document.getElementById("population").innerHTML = `Population: ${birds.length}`
                         if (birds.length===0) {
                             gameOver()
                             // state.curr = state.getReady
@@ -79,12 +85,12 @@ export default function bird(state, gameOver){
             }
             this.frame = this.frame%this.animations.length;  
         },
-        flap : function(){
+        flap: function(){
             if(this.y > 0){
                 this.speed = -this.thrust;
             }
         },
-        setRotation : function(){
+        setRotation: function(){
             if(this.speed <= 0){
                 this.rotatation = Math.max(-25, -25 * this.speed/(-1*this.thrust));
             }
@@ -92,7 +98,7 @@ export default function bird(state, gameOver){
                 this.rotatation = Math.min(90, 90 * this.speed/(this.thrust*2));
             }
         },
-        collisioned : function(pipe, UI){
+        collisioned: function(pipe, UI){
             if(!pipe.pipes.length) return;
             let bird = this.animations[0].sprite;
             let x = pipe.pipes[0].x;
@@ -115,6 +121,7 @@ export default function bird(state, gameOver){
         },
         brain: null,
         think: function(pipe){
+            if (state.curr !== state.Play) return
             this.score++
             let birdPipeDistance, birdHeight
             if(pipe.pipes[0]?.x < 0){

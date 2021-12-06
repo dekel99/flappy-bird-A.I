@@ -6,36 +6,42 @@ import pipeObj from "./js/objects/pipe"
 import birdObj from './js/objects/bird'
 import UIObj from './js/objects/ui'
 import pickBestBird from "./js/pickBestBird"
+import createBirds from "./js/createBirds"
 import '@/styles/index.scss'
 
 let birds = []
 let frames = 0
 let prevTime = 0
-let gameSpeed = 1
-let bestBirdMode = false
+let gameSpeed = 2
 let singleBirdMode = false
 let singleBird
 const birdsTotal = 500
 const dx = 2;
-const state = {curr: 0, getReady: 0, Play: 1, gameOver: 2, resetFrames: ()=> frames=0}
+const state = {curr: 0, getReady: 0, Play: 1, gameOver: 2, aiMode: true, resetFrames: ()=> frames=0}
 const scrn = document.getElementById('canvas');
 const sctx = scrn.getContext("2d");
 const start = new Date().getTime() / 1000;
 const fps = 60
 scrn.tabIndex = 1;
 
-eventListeners(state, applyBirds)
+// eventListeners(state, applyBirds, singleBird)
 
 function gameOver(){
-    state.curr = state.getReady;
+    state.curr = state.getReady
     if (singleBirdMode) {
         singleBird.speed = 0
         singleBird.y = 100
+        frames = 0
+        state.curr = state.getReady
+        document.getElementById("population").innerHTML = "Population: 1"
     } else {
         applyBirds("gameOver")
+        setTimeout(() => {
+            document.getElementById("population").innerHTML = `Population: ${birds.length}`
+        }, 10);
     } 
     pipe.pipes=[];
-    UI.score.curr = 0;
+    UI.score.curr = 0
 }
 
 const gnd = groundObj(state, dx)
@@ -44,26 +50,86 @@ const pipe = pipeObj(state, dx)
 const bird = birdObj(state, gameOver)
 const UI = UIObj(state)
 
-function createBirds(){
-    for(let i=0; i<birdsTotal; i++){
-        birds.push(Object.assign({}, bird))
-    }
-    applyBirds("brain")
-}
-createBirds()
+birds = createBirds(bird, birdsTotal)
+applyBirds("brain")
 
 playBestBird.addEventListener("click", ()=> {
-    singleBird = pickBestBird()
-    console.log(singleBird)
-    gameOver()
-    bestBirdMode = !bestBirdMode
-    singleBirdMode = !singleBirdMode
+    singleBirdMode ? activateMultiBirds() : activateSingleBird()
 })
+
+toggleAi.addEventListener("click", ()=> {
+    state.aiMode ? disableAi() : activateAi()
+})
+
+scrn.onkeydown = function keyDown(e) {
+    if (e.keyCode == 32 || e.keyCode == 87 || e.keyCode == 38){  // Space Key or W key or arrow up
+        switch (state.curr) {
+            case state.getReady:
+                state.curr = state.Play;
+                state.resetFrames()
+                document.getElementById("playBestBird").disabled = false;
+                break;
+            case state.Play:
+                singleBird ? singleBird.flap() : applyBirds("flap") 
+                break;
+            case state.gameOver:
+                state.curr = state.getReady;
+                applyBirds("gameOver")
+                pipe.pipes=[];
+                UI.score.curr = 0;
+                break;
+        }  
+    }
+}
+
+scrn.addEventListener("click",()=>{
+    switch (state.curr) {
+        case state.getReady :
+            state.curr = state.Play;
+            state.resetFrames()
+            document.getElementById("playBestBird").disabled = false;
+            break;
+        case state.Play:
+            singleBird && singleBird.flap() 
+            break;
+        case state.gameOver :
+            gameOver()
+            break;
+    }
+})
+
+function activateSingleBird(){
+    singleBirdMode = true
+    singleBird = pickBestBird(birds) ? pickBestBird(birds) : bird
+    document.getElementById("playBestBird").innerHTML = "Return training"
+    eventListeners(state, applyBirds, singleBird)
+    gameOver()
+}
+
+function activateMultiBirds(){
+    singleBirdMode = false
+    document.getElementById("playBestBird").innerHTML = "Best bird so far"
+    eventListeners(state, applyBirds)
+    gameOver()
+}
+
+function activateAi(){
+    activateMultiBirds()
+    state.aiMode = true
+    document.getElementById("toggleAi").innerHTML = "Let me play!"
+}
+
+function disableAi(){
+    activateSingleBird()
+    state.aiMode = false
+    document.getElementById("toggleAi").innerHTML = "Let A.I play!"
+}
+
 
 function applyBirds(func){
     for(let i=0; i<birds.length; i++){
         if(func === "update"){
-            birds[i].update(frames, birds, birdsTotal, pipe, gnd, UI)
+            birds[i].update(frames, birds, singleBirdMode, birdsTotal, pipe, gnd, UI)
         } else if(func === "flap"){
             birds[i].flap()
         } else if(func === "draw"){
@@ -91,7 +157,8 @@ function gameLoop(){
     for (let i=0; i<gameSpeed; i++){
         // if(now-prevTime>1/fps){
             update();
-            singleBirdMode ? singleBird.think(pipe) : applyBirds("think")
+            //state.aiMode && 
+            state.aiMode && singleBirdMode ? singleBird.think(pipe) : applyBirds("think")
             frames++;
             prevTime = now
             // }
@@ -101,7 +168,7 @@ function gameLoop(){
 }
 
 function update(){
-    singleBirdMode ? singleBird.update(frames, birds, birdsTotal, pipe, gnd, UI) : applyBirds("update")
+    singleBirdMode ? singleBird.update(frames, birds, singleBirdMode, birdsTotal, pipe, gnd, UI) : applyBirds("update")
     gnd.update();
     pipe.update(frames);
     UI.update();
