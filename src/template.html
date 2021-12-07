@@ -9,10 +9,18 @@
     <link href="https://fonts.googleapis.com/css?family=Squada+One&display=swap" rel="stylesheet">
 </head>
 <body>
-    <canvas id="canvas" width="276" height="414"></canvas>
-    <input type="range" min="1" max="100" value="1" class="slider" id="speedSlider">
-    <button disabled id="playBestBird">Best bird so far</button>
-    <button id="toggleAi">Let A.I play!</button>
-    <h2 id="population">Population: 500</h2>
+    <div class="page-container">
+        <canvas id="canvas" width="276" height="414"></canvas>
+        <button id="toggleAi">Let me play!</button>
+        <div id="ai-config" class="ai-config">
+            <h3 id="population">Population: 500</h3>
+            <h3 id="gen">Gen: 1</h3>
+            <div class="slider-container">
+                <label for="speedSlider">Game speed</label>
+                <input type="range" min="1" max="5" value="1" class="slider" id="speedSlider">
+            </div>
+            <button disabled id="playBestBird">Best bird so far</button>
+        </div>
+    </div>
 </body>
 </html>

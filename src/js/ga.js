@@ -1,9 +1,12 @@
+let gen = 2
+
 export function nextGeneration(birds, savedBirds, birdsTotal, bird){
-    console.log("next gen created")
+    document.getElementById("gen").innerHTML = `Gen: ${gen}`
     calculateFitness(savedBirds)
     for (let i = 0; i < birdsTotal; i++){
         birds[i] = pickOne(savedBirds, bird)
     }
+    gen++
 }
 
 function pickOne(savedBirds, bird){

@@ -40,9 +40,9 @@ export default function UI(state){
                     sctx.drawImage(this.tap[this.frame].sprite,this.tx,this.ty)
                     break;
             }
-            this.drawScore();
+            this.drawScore(state);
         },
-        drawScore : function() {
+        drawScore : function(state) {
                 sctx.fillStyle = "#FFFFFF";
                 sctx.strokeStyle = "#000000";
             switch (state.curr) {

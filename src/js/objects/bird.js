@@ -12,23 +12,22 @@ let savedBirds = []
 
 export default function bird(state, gameOver){
     let bird = {
-        animations :
-            [
-                {sprite : new Image()},
-                {sprite : new Image()},
-                {sprite : new Image()},
-                {sprite : new Image()},
-            ],
-        rotatation : 0,
-        x : 50,
-        y : 100,
-        speed : 0,
-        gravity : .125,
-        thrust : 3.6,
-        frame:0,
+        animations: [
+            {sprite: new Image()},
+            {sprite: new Image()},
+            {sprite: new Image()},
+            {sprite: new Image()},
+        ],
+        rotatation: 0,
+        x: 50,
+        y: 100,
+        speed: 0,
+        gravity: .125,
+        thrust: 3.6,
+        frame: 0,
         score: 0,
         fitness: 0,
-        draw : function() {
+        draw: function() {
             let h = this.animations[this.frame].sprite.height;
             let w = this.animations[this.frame].sprite.width;
             sctx.save();
@@ -37,7 +36,7 @@ export default function bird(state, gameOver){
             sctx.drawImage(this.animations[this.frame].sprite,-w/2,-h/2);
             sctx.restore();
         },
-        update : function(frames, birds, singleBirdMode, birdsTotal, pipe, gnd, UI) {
+        update: function(frames, birds, singleBirdMode, birdsTotal, pipe, gnd, UI) {
             let r = parseFloat(this.animations[0].sprite.width)/2;
             switch (state.curr) {
                 case state.getReady:
@@ -51,10 +50,11 @@ export default function bird(state, gameOver){
                     this.setRotation()
                     this.speed += this.gravity;
                     if(this.y + r  >= gnd.y||this.collisioned(pipe, UI)){
+                        this.frame = 1
                         if(singleBirdMode){
                             document.getElementById("population").innerHTML = `Population: 1` 
-                            gameOver()
-                            state.curr = state.Play
+                            state.curr = state.aiMode ? state.Play : state.gameOver
+                            if(state.aiMode) gameOver()
                             return
                         }
                         savedBirds.push(birds.splice(birds.indexOf(this), 1)[0])
@@ -69,7 +69,7 @@ export default function bird(state, gameOver){
                         }
                     }
                     break;
-                case state.gameOver : 
+                case state.gameOver: 
                     this.frame = 1;
                     if(this.y + r  < gnd.y) {
                         this.y += this.speed;
